@@ -27,10 +27,10 @@ interface ACFContent {
   companyphone?: string;
   maplocation?: string;
 
-  // Services
-  serviceimage1?: { url: string; alt?: string };
-  serviceimage2?: { url: string; alt?: string };
-  serviceimage3?: { url: string; alt?: string };
+  // Services (Image URL return format = string)
+  serviceimage1?: string;
+  serviceimage2?: string;
+  serviceimage3?: string;
   serviceheading1?: string;
   serviceheading2?: string;
   serviceheading3?: string;
@@ -179,10 +179,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   key={index}
                   className="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden"
                 >
-                  {service.image?.url && (
+                  {service.image && (
                     <img
-                      src={service.image.url}
-                      alt={service.image.alt || service.heading || ""}
+                      src={service.image}
+                      alt={service.heading || ""}
                       className="w-full h-48 object-cover"
                     />
                   )}
