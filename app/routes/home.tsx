@@ -1,287 +1,437 @@
 import type { Route } from "./+types/home";
 
-// Types for your content - adjust these to match your ACF fields
-interface HeroContent {
-  headline: string;
-  subheadline: string;
-  ctaText: string;
-  ctaLink: string;
-  backgroundImage?: string;
-}
+// Types matching your ACF fields
+interface ACFContent {
+  // Headings and Content
+  heading1?: string;
+  heading2?: string;
+  heading3?: string;
+  heading4?: string;
+  heading5?: string;
+  heading6?: string;
+  heading7?: string;
+  heading8?: string;
+  content1?: string;
+  content2?: string;
+  content3?: string;
+  content4?: string;
+  content5?: string;
+  content6?: string;
+  content7?: string;
+  content8?: string;
 
-interface Feature {
-  id: string;
-  title: string;
-  description: string;
-  icon?: string;
-}
+  // Location Info
+  location?: string;
+  county?: string;
+  locationstateshort?: string;
+  companyphone?: string;
+  maplocation?: string;
 
-interface AboutContent {
-  title: string;
-  description: string;
-  image?: string;
-}
+  // Services
+  serviceimage1?: { url: string; alt?: string };
+  serviceimage2?: { url: string; alt?: string };
+  serviceimage3?: { url: string; alt?: string };
+  serviceheading1?: string;
+  serviceheading2?: string;
+  serviceheading3?: string;
+  serviceexcerpt1?: string;
+  serviceexcerpt2?: string;
+  serviceexcerpt3?: string;
+  serviceurl1?: string;
+  serviceurl2?: string;
+  serviceurl3?: string;
 
-interface Testimonial {
-  id: string;
-  quote: string;
-  author: string;
-  role: string;
-  avatar?: string;
-}
+  // Reviews
+  reviewslider?: string;
 
-interface CTAContent {
-  title: string;
-  description: string;
-  buttonText: string;
-  buttonLink: string;
-}
+  // Wiki/About
+  wikiexcerpt?: string;
+  wikiblurb?: string;
+  wikilocationurl?: string;
+  wikicountyurl?: string;
+  wikistateurl?: string;
 
-interface HomePageContent {
-  hero: HeroContent;
-  features: Feature[];
-  about: AboutContent;
-  testimonials: Testimonial[];
-  cta: CTAContent;
+  // Maps
+  locationmap?: string;
+  dynamicmaphtml?: string;
+  directionsmap?: string;
+  gmbmap?: string;
+
+  // Links
+  aggregatelinkshtml?: string;
+  internallinkprevious?: string;
+  internallinknext?: string;
+
+  // SEO
+  anchortag?: string;
+  masterkeyword?: string;
 }
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Your Site Name | Home" },
+    { title: "Home" },
     { name: "description", content: "Welcome to our website" },
   ];
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-  // Fallback content in case API fails
-  const fallbackContent: HomePageContent = {
-    hero: {
-      headline: "Welcome to Our Website",
-      subheadline: "We help you achieve amazing things with our innovative solutions",
-      ctaText: "Get Started",
-      ctaLink: "/contact",
-    },
-    features: [
-      { id: "1", title: "Feature One", description: "Description of your first feature." },
-      { id: "2", title: "Feature Two", description: "Description of your second feature." },
-      { id: "3", title: "Feature Three", description: "Description of your third feature." },
-    ],
-    about: {
-      title: "About Us",
-      description: "Tell your story here.",
-    },
-    testimonials: [
-      { id: "1", quote: "Great service!", author: "Jane Smith", role: "CEO" },
-    ],
-    cta: {
-      title: "Ready to Get Started?",
-      description: "Join us today.",
-      buttonText: "Contact Us",
-      buttonLink: "/contact",
-    },
-  };
-
   try {
-    // Fetch home page from WordPress REST API
     const response = await fetch(
       "https://statichozio.com/wp-json/wp/v2/pages?slug=home&_fields=id,title,acf"
     );
 
     if (!response.ok) {
       console.error("API response not ok:", response.status);
-      return { content: fallbackContent };
+      return { acf: null, error: true };
     }
 
     const pages = await response.json();
 
     if (!pages || pages.length === 0) {
       console.error("No home page found");
-      return { content: fallbackContent };
+      return { acf: null, error: true };
     }
 
     const page = pages[0];
-    const acf = page.acf || {};
-
-    // Map ACF fields to content structure
-    // TODO: Update these field names to match your actual ACF field names
-    const content: HomePageContent = {
-      hero: {
-        headline: acf.hero_headline || fallbackContent.hero.headline,
-        subheadline: acf.hero_subheadline || fallbackContent.hero.subheadline,
-        ctaText: acf.hero_cta_text || fallbackContent.hero.ctaText,
-        ctaLink: acf.hero_cta_link || fallbackContent.hero.ctaLink,
-        backgroundImage: acf.hero_background_image?.url,
-      },
-      features: acf.features?.map((f: any, index: number) => ({
-        id: String(index + 1),
-        title: f.title || f.feature_title,
-        description: f.description || f.feature_description,
-        icon: f.icon,
-      })) || fallbackContent.features,
-      about: {
-        title: acf.about_title || fallbackContent.about.title,
-        description: acf.about_description || fallbackContent.about.description,
-        image: acf.about_image?.url,
-      },
-      testimonials: acf.testimonials?.map((t: any, index: number) => ({
-        id: String(index + 1),
-        quote: t.quote || t.testimonial_quote,
-        author: t.author || t.testimonial_author,
-        role: t.role || t.testimonial_role,
-        avatar: t.avatar?.url || t.testimonial_avatar?.url,
-      })) || fallbackContent.testimonials,
-      cta: {
-        title: acf.cta_title || fallbackContent.cta.title,
-        description: acf.cta_description || fallbackContent.cta.description,
-        buttonText: acf.cta_button_text || fallbackContent.cta.buttonText,
-        buttonLink: acf.cta_button_link || fallbackContent.cta.buttonLink,
-      },
-    };
-
-    return { content };
+    return { acf: page.acf as ACFContent, error: false };
   } catch (error) {
     console.error("Error fetching from WordPress API:", error);
-    return { content: fallbackContent };
+    return { acf: null, error: true };
   }
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { content } = loaderData;
+  const { acf, error } = loaderData;
+
+  if (error || !acf) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600 dark:text-gray-400">Unable to load content. Please try again later.</p>
+      </div>
+    );
+  }
+
+  // Build services array from individual fields
+  const services = [
+    {
+      image: acf.serviceimage1,
+      heading: acf.serviceheading1,
+      excerpt: acf.serviceexcerpt1,
+      url: acf.serviceurl1,
+    },
+    {
+      image: acf.serviceimage2,
+      heading: acf.serviceheading2,
+      excerpt: acf.serviceexcerpt2,
+      url: acf.serviceurl2,
+    },
+    {
+      image: acf.serviceimage3,
+      heading: acf.serviceheading3,
+      excerpt: acf.serviceexcerpt3,
+      url: acf.serviceurl3,
+    },
+  ].filter((s) => s.heading); // Only show services that have a heading
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section
-        className="bg-gradient-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-950 text-white py-24 px-6"
-        style={
-          content.hero.backgroundImage
-            ? { backgroundImage: `url(${content.hero.backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center" }
-            : undefined
-        }
-      >
+      <section className="bg-gradient-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-950 text-white py-24 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-            {content.hero.headline}
-          </h1>
-          <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            {content.hero.subheadline}
-          </p>
-          <a
-            href={content.hero.ctaLink}
-            className="inline-block bg-white text-blue-600 font-semibold px-8 py-3 rounded-lg hover:bg-blue-50 transition-colors"
-          >
-            {content.hero.ctaText}
-          </a>
+          {acf.heading1 && (
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+              {acf.heading1}
+            </h1>
+          )}
+          {acf.content1 && (
+            <p className="text-xl md:text-2xl text-blue-100 mb-6 max-w-2xl mx-auto">
+              {acf.content1}
+            </p>
+          )}
+          {(acf.location || acf.county) && (
+            <p className="text-lg text-blue-200">
+              {[acf.location, acf.county, acf.locationstateshort].filter(Boolean).join(", ")}
+            </p>
+          )}
+          {acf.companyphone && (
+            <a
+              href={`tel:${acf.companyphone}`}
+              className="inline-block mt-8 bg-white text-blue-600 font-semibold px-8 py-3 rounded-lg hover:bg-blue-50 transition-colors"
+            >
+              Call {acf.companyphone}
+            </a>
+          )}
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-6 bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
-            What We Offer
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {content.features.map((feature) => (
-              <div
-                key={feature.id}
-                className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow"
-              >
-                {feature.icon && (
-                  <div className="text-4xl mb-4">{feature.icon}</div>
-                )}
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* About Section */}
-      <section className="py-20 px-6 bg-white dark:bg-gray-950">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center gap-12">
-            {content.about.image && (
-              <div className="md:w-1/2">
-                <img
-                  src={content.about.image}
-                  alt="About us"
-                  className="rounded-xl shadow-lg"
-                />
-              </div>
-            )}
-            <div className={content.about.image ? "md:w-1/2" : "max-w-3xl mx-auto text-center"}>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
-                {content.about.title}
+      {/* Services Section */}
+      {services.length > 0 && (
+        <section className="py-20 px-6 bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-6xl mx-auto">
+            {acf.heading2 && (
+              <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
+                {acf.heading2}
               </h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-                {content.about.description}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-20 px-6 bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
-            What Our Customers Say
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            {content.testimonials.map((testimonial) => (
-              <div
-                key={testimonial.id}
-                className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm"
-              >
-                <blockquote className="text-lg text-gray-700 dark:text-gray-200 mb-6 italic">
-                  "{testimonial.quote}"
-                </blockquote>
-                <div className="flex items-center gap-4">
-                  {testimonial.avatar && (
+            )}
+            <div className="grid md:grid-cols-3 gap-8">
+              {services.map((service, index) => (
+                <div
+                  key={index}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                >
+                  {service.image?.url && (
                     <img
-                      src={testimonial.avatar}
-                      alt={testimonial.author}
-                      className="w-12 h-12 rounded-full object-cover"
+                      src={service.image.url}
+                      alt={service.image.alt || service.heading || ""}
+                      className="w-full h-48 object-cover"
                     />
                   )}
-                  <div>
-                    <div className="font-semibold text-gray-900 dark:text-white">
-                      {testimonial.author}
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      {testimonial.role}
-                    </div>
+                  <div className="p-6">
+                    {service.heading && (
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                        {service.heading}
+                      </h3>
+                    )}
+                    {service.excerpt && (
+                      <p className="text-gray-600 dark:text-gray-300 mb-4">
+                        {service.excerpt}
+                      </p>
+                    )}
+                    {service.url && (
+                      <a
+                        href={service.url}
+                        className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
+                      >
+                        Learn More →
+                      </a>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* CTA Section */}
-      <section className="py-20 px-6 bg-blue-600 dark:bg-blue-800 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            {content.cta.title}
-          </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            {content.cta.description}
-          </p>
-          <a
-            href={content.cta.buttonLink}
-            className="inline-block bg-white text-blue-600 font-semibold px-8 py-3 rounded-lg hover:bg-blue-50 transition-colors"
-          >
-            {content.cta.buttonText}
-          </a>
-        </div>
-      </section>
+      {/* About/Wiki Section */}
+      {(acf.wikiexcerpt || acf.wikiblurb) && (
+        <section className="py-20 px-6 bg-white dark:bg-gray-950">
+          <div className="max-w-4xl mx-auto">
+            {acf.heading3 && (
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+                {acf.heading3}
+              </h2>
+            )}
+            {acf.wikiexcerpt && (
+              <p className="text-xl text-gray-700 dark:text-gray-200 mb-6 leading-relaxed">
+                {acf.wikiexcerpt}
+              </p>
+            )}
+            {acf.wikiblurb && (
+              <div
+                className="text-gray-600 dark:text-gray-300 leading-relaxed prose dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: acf.wikiblurb }}
+              />
+            )}
+            {(acf.wikilocationurl || acf.wikicountyurl || acf.wikistateurl) && (
+              <div className="flex flex-wrap gap-4 mt-8">
+                {acf.wikilocationurl && (
+                  <a href={acf.wikilocationurl} className="text-blue-600 dark:text-blue-400 hover:underline">
+                    Learn about {acf.location}
+                  </a>
+                )}
+                {acf.wikicountyurl && (
+                  <a href={acf.wikicountyurl} className="text-blue-600 dark:text-blue-400 hover:underline">
+                    Learn about {acf.county}
+                  </a>
+                )}
+                {acf.wikistateurl && (
+                  <a href={acf.wikistateurl} className="text-blue-600 dark:text-blue-400 hover:underline">
+                    Learn about {acf.locationstateshort}
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Content Section 2 */}
+      {(acf.heading4 || acf.content2) && (
+        <section className="py-20 px-6 bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-4xl mx-auto">
+            {acf.heading4 && (
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+                {acf.heading4}
+              </h2>
+            )}
+            {acf.content2 && (
+              <div
+                className="text-gray-600 dark:text-gray-300 leading-relaxed prose dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: acf.content2 }}
+              />
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Reviews Section */}
+      {acf.reviewslider && (
+        <section className="py-20 px-6 bg-white dark:bg-gray-950">
+          <div className="max-w-6xl mx-auto">
+            {acf.heading5 && (
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-12 text-center">
+                {acf.heading5}
+              </h2>
+            )}
+            <div
+              className="reviews-container"
+              dangerouslySetInnerHTML={{ __html: acf.reviewslider }}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* Content Section 3 */}
+      {(acf.heading6 || acf.content3) && (
+        <section className="py-20 px-6 bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-4xl mx-auto">
+            {acf.heading6 && (
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+                {acf.heading6}
+              </h2>
+            )}
+            {acf.content3 && (
+              <div
+                className="text-gray-600 dark:text-gray-300 leading-relaxed prose dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: acf.content3 }}
+              />
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Content Section 4 */}
+      {(acf.heading7 || acf.content4) && (
+        <section className="py-20 px-6 bg-white dark:bg-gray-950">
+          <div className="max-w-4xl mx-auto">
+            {acf.heading7 && (
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+                {acf.heading7}
+              </h2>
+            )}
+            {acf.content4 && (
+              <div
+                className="text-gray-600 dark:text-gray-300 leading-relaxed prose dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: acf.content4 }}
+              />
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Map Section */}
+      {(acf.locationmap || acf.dynamicmaphtml || acf.gmbmap) && (
+        <section className="py-20 px-6 bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-6xl mx-auto">
+            {acf.heading8 && (
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-12 text-center">
+                {acf.heading8}
+              </h2>
+            )}
+            <div className="grid md:grid-cols-2 gap-8">
+              {acf.gmbmap && (
+                <div
+                  className="rounded-xl overflow-hidden shadow-lg"
+                  dangerouslySetInnerHTML={{ __html: acf.gmbmap }}
+                />
+              )}
+              {acf.dynamicmaphtml && (
+                <div
+                  className="rounded-xl overflow-hidden shadow-lg"
+                  dangerouslySetInnerHTML={{ __html: acf.dynamicmaphtml }}
+                />
+              )}
+              {acf.directionsmap && (
+                <div
+                  className="rounded-xl overflow-hidden shadow-lg"
+                  dangerouslySetInnerHTML={{ __html: acf.directionsmap }}
+                />
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Additional Content Sections */}
+      {(acf.content5 || acf.content6 || acf.content7 || acf.content8) && (
+        <section className="py-20 px-6 bg-white dark:bg-gray-950">
+          <div className="max-w-4xl mx-auto space-y-12">
+            {acf.content5 && (
+              <div
+                className="text-gray-600 dark:text-gray-300 leading-relaxed prose dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: acf.content5 }}
+              />
+            )}
+            {acf.content6 && (
+              <div
+                className="text-gray-600 dark:text-gray-300 leading-relaxed prose dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: acf.content6 }}
+              />
+            )}
+            {acf.content7 && (
+              <div
+                className="text-gray-600 dark:text-gray-300 leading-relaxed prose dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: acf.content7 }}
+              />
+            )}
+            {acf.content8 && (
+              <div
+                className="text-gray-600 dark:text-gray-300 leading-relaxed prose dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: acf.content8 }}
+              />
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Aggregate Links */}
+      {acf.aggregatelinkshtml && (
+        <section className="py-12 px-6 bg-gray-100 dark:bg-gray-800">
+          <div className="max-w-6xl mx-auto">
+            <div
+              className="prose dark:prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: acf.aggregatelinkshtml }}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* Internal Navigation */}
+      {(acf.internallinkprevious || acf.internallinknext) && (
+        <nav className="py-8 px-6 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
+          <div className="max-w-4xl mx-auto flex justify-between items-center">
+            {acf.internallinkprevious ? (
+              <a
+                href={acf.internallinkprevious}
+                className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2"
+              >
+                ← Previous
+              </a>
+            ) : (
+              <span />
+            )}
+            {acf.internallinknext && (
+              <a
+                href={acf.internallinknext}
+                className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2"
+              >
+                Next →
+              </a>
+            )}
+          </div>
+        </nav>
+      )}
     </div>
   );
 }
