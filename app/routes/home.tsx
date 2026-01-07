@@ -77,7 +77,7 @@ export function meta({}: Route.MetaArgs) {
 export async function loader({ context }: Route.LoaderArgs) {
   try {
     const response = await fetch(
-      "https://statichozio.com/wp-json/wp/v2/pages?slug=home&_fields=id,title,acf"
+      "https://statichozio.com/wp-json/wp/v2/pages?slug=seo-company-kensington-ny&_fields=id,title,acf"
     );
 
     if (!response.ok) {
