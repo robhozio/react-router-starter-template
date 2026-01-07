@@ -1,6 +1,6 @@
 import type { Route } from "./+types/home";
 
-// Types for your content - these will match your ACF fields
+// Types for your content - adjust these to match your ACF fields
 interface HeroContent {
   headline: string;
   subheadline: string;
@@ -53,11 +53,8 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-  // TODO: Replace with your ACF REST API call
-  // const response = await fetch('https://yoursite.com/wp-json/acf/v3/pages/home');
-  // const acfData = await response.json();
-
-  const content: HomePageContent = {
+  // Fallback content in case API fails
+  const fallbackContent: HomePageContent = {
     hero: {
       headline: "Welcome to Our Website",
       subheadline: "We help you achieve amazing things with our innovative solutions",
@@ -65,52 +62,87 @@ export async function loader({ context }: Route.LoaderArgs) {
       ctaLink: "/contact",
     },
     features: [
-      {
-        id: "1",
-        title: "Feature One",
-        description: "Description of your first key feature or service offering.",
-      },
-      {
-        id: "2",
-        title: "Feature Two",
-        description: "Description of your second key feature or service offering.",
-      },
-      {
-        id: "3",
-        title: "Feature Three",
-        description: "Description of your third key feature or service offering.",
-      },
+      { id: "1", title: "Feature One", description: "Description of your first feature." },
+      { id: "2", title: "Feature Two", description: "Description of your second feature." },
+      { id: "3", title: "Feature Three", description: "Description of your third feature." },
     ],
     about: {
       title: "About Us",
-      description: "Tell your story here. Share your mission, values, and what makes you unique. This section helps visitors connect with your brand on a personal level.",
+      description: "Tell your story here.",
     },
     testimonials: [
-      {
-        id: "1",
-        quote: "This product changed everything for our business. Highly recommended!",
-        author: "Jane Smith",
-        role: "CEO, Company Name",
-      },
-      {
-        id: "2",
-        quote: "Excellent service and support. We've been customers for years.",
-        author: "John Doe",
-        role: "Director, Another Company",
-      },
+      { id: "1", quote: "Great service!", author: "Jane Smith", role: "CEO" },
     ],
     cta: {
       title: "Ready to Get Started?",
-      description: "Join thousands of satisfied customers today.",
+      description: "Join us today.",
       buttonText: "Contact Us",
       buttonLink: "/contact",
     },
   };
 
-  return {
-    message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE,
-    content,
-  };
+  try {
+    // Fetch home page from WordPress REST API
+    const response = await fetch(
+      "https://statichozio.com/wp-json/wp/v2/pages?slug=home&_fields=id,title,acf"
+    );
+
+    if (!response.ok) {
+      console.error("API response not ok:", response.status);
+      return { content: fallbackContent };
+    }
+
+    const pages = await response.json();
+
+    if (!pages || pages.length === 0) {
+      console.error("No home page found");
+      return { content: fallbackContent };
+    }
+
+    const page = pages[0];
+    const acf = page.acf || {};
+
+    // Map ACF fields to content structure
+    // TODO: Update these field names to match your actual ACF field names
+    const content: HomePageContent = {
+      hero: {
+        headline: acf.hero_headline || fallbackContent.hero.headline,
+        subheadline: acf.hero_subheadline || fallbackContent.hero.subheadline,
+        ctaText: acf.hero_cta_text || fallbackContent.hero.ctaText,
+        ctaLink: acf.hero_cta_link || fallbackContent.hero.ctaLink,
+        backgroundImage: acf.hero_background_image?.url,
+      },
+      features: acf.features?.map((f: any, index: number) => ({
+        id: String(index + 1),
+        title: f.title || f.feature_title,
+        description: f.description || f.feature_description,
+        icon: f.icon,
+      })) || fallbackContent.features,
+      about: {
+        title: acf.about_title || fallbackContent.about.title,
+        description: acf.about_description || fallbackContent.about.description,
+        image: acf.about_image?.url,
+      },
+      testimonials: acf.testimonials?.map((t: any, index: number) => ({
+        id: String(index + 1),
+        quote: t.quote || t.testimonial_quote,
+        author: t.author || t.testimonial_author,
+        role: t.role || t.testimonial_role,
+        avatar: t.avatar?.url || t.testimonial_avatar?.url,
+      })) || fallbackContent.testimonials,
+      cta: {
+        title: acf.cta_title || fallbackContent.cta.title,
+        description: acf.cta_description || fallbackContent.cta.description,
+        buttonText: acf.cta_button_text || fallbackContent.cta.buttonText,
+        buttonLink: acf.cta_button_link || fallbackContent.cta.buttonLink,
+      },
+    };
+
+    return { content };
+  } catch (error) {
+    console.error("Error fetching from WordPress API:", error);
+    return { content: fallbackContent };
+  }
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
@@ -119,7 +151,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-950 text-white py-24 px-6">
+      <section
+        className="bg-gradient-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-950 text-white py-24 px-6"
+        style={
+          content.hero.backgroundImage
+            ? { backgroundImage: `url(${content.hero.backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center" }
+            : undefined
+        }
+      >
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
             {content.hero.headline}
