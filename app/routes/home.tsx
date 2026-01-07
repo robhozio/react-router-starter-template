@@ -54,10 +54,9 @@ export function meta({}: Route.MetaArgs) {
 
 export async function loader({ context }: Route.LoaderArgs) {
   // TODO: Replace with your ACF REST API call
-  // Example: const response = await fetch('https://yoursite.com/wp-json/acf/v3/pages/home');
+  // const response = await fetch('https://yoursite.com/wp-json/acf/v3/pages/home');
   // const acfData = await response.json();
 
-  // Placeholder content - replace with API data
   const content: HomePageContent = {
     hero: {
       headline: "Welcome to Our Website",
@@ -118,28 +117,46 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const { content } = loaderData;
 
   return (
-    <div className="home">
+    <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-content">
-          <h1>{content.hero.headline}</h1>
-          <p className="hero-subheadline">{content.hero.subheadline}</p>
-          <a href={content.hero.ctaLink} className="btn btn-primary">
+      <section className="bg-gradient-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-950 text-white py-24 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+            {content.hero.headline}
+          </h1>
+          <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            {content.hero.subheadline}
+          </p>
+          <a
+            href={content.hero.ctaLink}
+            className="inline-block bg-white text-blue-600 font-semibold px-8 py-3 rounded-lg hover:bg-blue-50 transition-colors"
+          >
             {content.hero.ctaText}
           </a>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="features">
-        <div className="container">
-          <h2>What We Offer</h2>
-          <div className="features-grid">
+      <section className="py-20 px-6 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
+            What We Offer
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
             {content.features.map((feature) => (
-              <div key={feature.id} className="feature-card">
-                {feature.icon && <div className="feature-icon">{feature.icon}</div>}
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
+              <div
+                key={feature.id}
+                className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+              >
+                {feature.icon && (
+                  <div className="text-4xl mb-4">{feature.icon}</div>
+                )}
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>
@@ -147,37 +164,60 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       </section>
 
       {/* About Section */}
-      <section className="about">
-        <div className="container">
-          <div className="about-content">
+      <section className="py-20 px-6 bg-white dark:bg-gray-950">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center gap-12">
             {content.about.image && (
-              <div className="about-image">
-                <img src={content.about.image} alt="About us" />
+              <div className="md:w-1/2">
+                <img
+                  src={content.about.image}
+                  alt="About us"
+                  className="rounded-xl shadow-lg"
+                />
               </div>
             )}
-            <div className="about-text">
-              <h2>{content.about.title}</h2>
-              <p>{content.about.description}</p>
+            <div className={content.about.image ? "md:w-1/2" : "max-w-3xl mx-auto text-center"}>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
+                {content.about.title}
+              </h2>
+              <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
+                {content.about.description}
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section className="testimonials">
-        <div className="container">
-          <h2>What Our Customers Say</h2>
-          <div className="testimonials-grid">
+      <section className="py-20 px-6 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
+            What Our Customers Say
+          </h2>
+          <div className="grid md:grid-cols-2 gap-8">
             {content.testimonials.map((testimonial) => (
-              <div key={testimonial.id} className="testimonial-card">
-                <blockquote>"{testimonial.quote}"</blockquote>
-                <div className="testimonial-author">
+              <div
+                key={testimonial.id}
+                className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm"
+              >
+                <blockquote className="text-lg text-gray-700 dark:text-gray-200 mb-6 italic">
+                  "{testimonial.quote}"
+                </blockquote>
+                <div className="flex items-center gap-4">
                   {testimonial.avatar && (
-                    <img src={testimonial.avatar} alt={testimonial.author} />
+                    <img
+                      src={testimonial.avatar}
+                      alt={testimonial.author}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
                   )}
                   <div>
-                    <strong>{testimonial.author}</strong>
-                    <span>{testimonial.role}</span>
+                    <div className="font-semibold text-gray-900 dark:text-white">
+                      {testimonial.author}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {testimonial.role}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -187,11 +227,18 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       </section>
 
       {/* CTA Section */}
-      <section className="cta">
-        <div className="container">
-          <h2>{content.cta.title}</h2>
-          <p>{content.cta.description}</p>
-          <a href={content.cta.buttonLink} className="btn btn-secondary">
+      <section className="py-20 px-6 bg-blue-600 dark:bg-blue-800 text-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            {content.cta.title}
+          </h2>
+          <p className="text-xl text-blue-100 mb-8">
+            {content.cta.description}
+          </p>
+          <a
+            href={content.cta.buttonLink}
+            className="inline-block bg-white text-blue-600 font-semibold px-8 py-3 rounded-lg hover:bg-blue-50 transition-colors"
+          >
             {content.cta.buttonText}
           </a>
         </div>
